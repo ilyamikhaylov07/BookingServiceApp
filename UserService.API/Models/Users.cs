@@ -9,6 +9,7 @@ namespace UserService.API.Models
         public int Id { get; set; }
         public string Username {  get; set; }
         public string PasswordHash { get; set; }
+        public string? RefreshToken { get; set; }
         public string Email { get; set; }
         [ForeignKey("RoleId")]
         public int RoleId {  get; set; }
