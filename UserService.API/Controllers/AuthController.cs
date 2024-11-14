@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.Json;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using UserService.API.DTOs;
@@ -16,37 +13,57 @@ namespace UserService.API.Controllers
     [Route("UserServise/[controller]/[action]")]
     public class AuthController : ControllerBase
     {
-        private readonly UserDbContext context;
-        public AuthController(UserDbContext context)
+        private readonly UserDbContext _context;
+        private readonly TokenManager _manager;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(UserDbContext context, TokenManager token, ILogger<AuthController> logger)
         {
-            this.context = context;
+            _context = context;
+            _manager = token;
+            _logger = logger;
         }
+
         [HttpPost]
         public async Task<IActionResult> Registration(RegistrationJson json)
         {
+            _logger.LogInformation("Начало регистрации пользователя с email: {Email}", json.Email);
             try
             {
                 string pattern = @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
                 bool isValidEmail = Regex.IsMatch(json.Email, pattern);
+
                 if (!isValidEmail)
                 {
+                    _logger.LogWarning("Неверный формат email: {Email}", json.Email);
                     return BadRequest("Неверная почта");
                 }
+
                 if (json.Password.Length < 8)
                 {
+                    _logger.LogWarning("Пароль слишком короткий для пользователя: {Email}", json.Email);
                     return BadRequest("Пароль должен содержать от 8 символов");
                 }
+
                 int roleId = json.IsSpecialist ? 1 : 2;
-                var role = await context.Roles.FindAsync(roleId);
-                var password = HasherPassword.HashPassword(json.Password); // Хэшируем пароль
+                var role = await _context.Roles.FindAsync(roleId);
 
                 if (role == null)
                 {
+                    _logger.LogError("Роль с ID {RoleId} не найдена", roleId);
                     return BadRequest("Роль не найдена");
                 }
 
-                var findUser = await context.Users.FirstOrDefaultAsync(u => u.Email == json.Email);
-                var people = new Users()
+                var findUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == json.Email);
+
+                if (findUser != null)
+                {
+                    _logger.LogWarning("Пользователь с email {Email} уже существует", json.Email);
+                    return BadRequest("Эта почта уже зарегистрирована");
+                }
+
+                var password = HasherPassword.HashPassword(json.Password); // Хэшируем пароль
+                var people = new Users
                 {
                     Username = json.UserName,
                     Email = json.Email,
@@ -54,134 +71,102 @@ namespace UserService.API.Controllers
                     Role = role,
                     Created = DateTime.UtcNow
                 };
-                context.Users.Add(people);
-                await context.SaveChangesAsync();
+
+                _context.Users.Add(people);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Пользователь {Email} успешно зарегистрирован", json.Email);
                 return Ok("Пользователь успешно зарегистрирован");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка при регистрации пользователя: {Email}", json.Email);
                 return BadRequest(ex.Message.ToString());
             }
-
-
         }
 
         [HttpPost]
-        public async Task<IActionResult> LoginUser(LoginUserJson json)
+        public async Task<IActionResult> Login(LoginUserJson json)
         {
+            _logger.LogInformation("Попытка входа пользователя с email: {Email}", json.Email);
             try
             {
-                var user = context.Users.FirstOrDefaultAsync(e => e.Email == json.Email);
-                if (user.Result == null)
+                var user = await _context.Users.FirstOrDefaultAsync(e => e.Email == json.Email);
+
+                if (user == null)
                 {
+                    _logger.LogWarning("Попытка входа с несуществующим email: {Email}", json.Email);
                     return BadRequest("Эта почта не зарегистрирована");
                 }
-                if (!HasherPassword.VerifyPassword(json.Password, user.Result.PasswordHash))
+
+                if (!HasherPassword.VerifyPassword(json.Password, user.PasswordHash))
                 {
+                    _logger.LogWarning("Неверный пароль для пользователя с email: {Email}", json.Email);
                     return BadRequest("Неправильный пароль");
                 }
-                if(user.Result.RoleId == 1)
-                {
-                    return BadRequest("Вы заходите как специалист, но вы не поставили галочку");
-                } 
+
+                string role = user.RoleId == 1 ? "Specialist" : "User";
+                _logger.LogInformation("Role: {role}:", role);
+
                 List<Claim> claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Email, user.Result.Email),
-                    new Claim(ClaimTypes.Role, "User")
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, role)
                 };
 
-                // Создаем access token
-                var accessToken = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddHours(2),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymSecurityKey(), SecurityAlgorithms.HmacSha256)
-                );
-
-                string accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
-
-                // Создаем refresh token с более длительным сроком действия
-                var refreshToken = new JwtSecurityToken(
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddDays(7), // Длительный срок действия для refresh token
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymSecurityKey(), SecurityAlgorithms.HmacSha256)
-                );
-
-                string refreshTokenString = new JwtSecurityTokenHandler().WriteToken(refreshToken);
+                string accessToken = _manager.GenerateAccessToken(claims);
+                string refreshToken = _manager.GenerateRefreshToken(claims);
 
                 // Сохраняем refresh token и срок его действия в базе данных для пользователя
-                user.Result.RefreshToken = refreshTokenString;
-                await context.SaveChangesAsync();
+                user.RefreshToken = refreshToken;
+                await _context.SaveChangesAsync();
 
-                // Возвращаем оба токена клиенту
-                return Ok(new TokenJson { AccessToken = accessTokenString, RefreshToken = refreshTokenString });
-
-
+                _logger.LogInformation("Пользователь {Email} успешно вошел в систему", json.Email);
+                return Ok(new TokenJson { AccessToken = accessToken, RefreshToken = refreshToken });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка при входе пользователя с email: {Email}", json.Email);
                 return BadRequest(ex.Message.ToString());
             }
         }
+
         [HttpPost]
-        public async Task<IActionResult> LoginSpecialist(LoginUserJson json)
+        public async Task<IActionResult> UpdateToken(RefreshTokenJson json)
         {
+            _logger.LogInformation("Запрос обновления токена для refresh token: {RefreshToken}", json.RefreshToken);
             try
             {
-                var user = context.Users.FirstOrDefaultAsync(e => e.Email == json.Email);
-                if (user.Result == null)
+                var user = await _context.Users.FirstOrDefaultAsync(r => r.RefreshToken == json.RefreshToken);
+
+                if (user == null)
                 {
-                    return BadRequest("Эта почта не зарегистрирована");
+                    _logger.LogWarning("Невалидный refresh token: {RefreshToken}", json.RefreshToken);
+                    return Unauthorized("Invalid refresh token");
                 }
-                if (!HasherPassword.VerifyPassword(json.Password, user.Result.PasswordHash))
-                {
-                    return BadRequest("Неправильный пароль");
-                }
-                if (user.Result.RoleId == 2)
-                {
-                    return BadRequest("Вы заходите как клиент, уберите галочку");
-                }
+
+                string role = user.RoleId == 1 ? "Specialist" : "User";
+
                 List<Claim> claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Email, user.Result.Email),
-                    new Claim(ClaimTypes.Role, "Specialist")
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, role)
                 };
 
-                // Создаем access token
-                var accessToken = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddHours(2),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymSecurityKey(), SecurityAlgorithms.HmacSha256)
-                );
+                string accessToken = _manager.GenerateAccessToken(claims);
+                string refreshToken = _manager.GenerateRefreshToken(claims);
 
-                string accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
+                user.RefreshToken = refreshToken;
+                await _context.SaveChangesAsync();
 
-                // Создаем refresh token с более длительным сроком действия
-                var refreshToken = new JwtSecurityToken(
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddDays(7), // Длительный срок действия для refresh token
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymSecurityKey(), SecurityAlgorithms.HmacSha256)
-                );
-
-                string refreshTokenString = new JwtSecurityTokenHandler().WriteToken(refreshToken);
-
-                // Сохраняем refresh token и срок его действия в базе данных для пользователя
-                user.Result.RefreshToken = refreshTokenString;
-                await context.SaveChangesAsync();
-
-                // Возвращаем оба токена клиенту
-                return Ok(new TokenJson { AccessToken = accessTokenString, RefreshToken = refreshTokenString });
-
-
+                _logger.LogInformation("Токены для пользователя {Email} успешно обновлены", user.Email);
+                return Ok(new TokenJson { AccessToken = accessToken, RefreshToken = refreshToken });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message.ToString());
+                _logger.LogError(ex, "Ошибка при обновлении токена для refresh token: {RefreshToken}", json.RefreshToken);
+                return BadRequest(ex.Message);
             }
         }
-
     }
 }
