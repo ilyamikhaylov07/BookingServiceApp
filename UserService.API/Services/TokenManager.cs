@@ -10,6 +10,7 @@ namespace UserService.API.Services
         private readonly string _issuer;
         private readonly string _audience;
 
+
         public TokenManager(SymmetricSecurityKey securityKey, string issuer, string audience)
         {
             _securityKey = securityKey;
@@ -26,7 +27,6 @@ namespace UserService.API.Services
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: new SigningCredentials(_securityKey, SecurityAlgorithms.HmacSha256)
             );
-
             return new JwtSecurityTokenHandler().WriteToken(accessToken);
         }
 

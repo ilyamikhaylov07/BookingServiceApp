@@ -54,7 +54,7 @@ namespace UserService.API.Controllers
                     return BadRequest("Роль не найдена");
                 }
 
-                var findUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == json.Email);
+                var findUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == json.Email || u.Username == json.UserName);
 
                 if (findUser != null)
                 {
@@ -71,10 +71,22 @@ namespace UserService.API.Controllers
                     Role = role,
                     Created = DateTime.UtcNow
                 };
-
+     
                 _context.Users.Add(people);
+
                 await _context.SaveChangesAsync();
 
+                var profiles = new UserProfiles
+                {
+                    UserId = people.Id,
+                    FirstName = null,
+                    LastName = null,
+                    PhoneNumber = null,
+                    Address = null
+                };
+
+                _context.UserProfiles.Add(profiles);
+                await _context.SaveChangesAsync();
                 _logger.LogInformation("Пользователь {Email} успешно зарегистрирован", json.Email);
                 return Ok("Пользователь успешно зарегистрирован");
             }
@@ -110,6 +122,7 @@ namespace UserService.API.Controllers
 
                 List<Claim> claims = new List<Claim>
                 {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, role)
                 };
@@ -149,6 +162,7 @@ namespace UserService.API.Controllers
 
                 List<Claim> claims = new List<Claim>
                 {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.Role, role)
                 };
