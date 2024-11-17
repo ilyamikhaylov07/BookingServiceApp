@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  # (UserService)
+  user-service:
+    build:
+      context: .
+      dockerfile: UserService.API/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RabbitMQ__Host=amqp://rabbitmq
+    depends_on:
+      - rabbitmq
+
+  # RabbitMQ � Management UI
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ (AMQP)
+      - "15672:15672"  #  Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest

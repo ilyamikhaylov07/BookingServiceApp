@@ -56,7 +56,7 @@ namespace UserService.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении данных пользователя с email: {UserEmail}");
+                _logger.LogError(ex, "Ошибка при получении данных пользователя с email: {UserEmail}", HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
                 return StatusCode(500, "Внутренняя ошибка сервера. Попробуйте снова.");
             }
 
@@ -75,7 +75,7 @@ namespace UserService.API.Controllers
                 }
                 if (!int.TryParse(user_id, out int userId))
                 {
-                    _logger.LogWarning("Неверный идентификатор пользователя: {UserId}", user_id);
+                    _logger.LogWarning("Не удаётся преобразовать в INT: {UserId}", user_id);
                     return BadRequest("Неверный идентификатор пользователя");
                 }
 
@@ -103,10 +103,102 @@ namespace UserService.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении данных пользователя с email: {UserEmail}");
+                _logger.LogError(ex, "Ошибка при заполнении данных пользователя с email: {UserEmail}", HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
                 return StatusCode(500, "Внутренняя ошибка сервера. Попробуйте снова.");
             }
         }
+        [Authorize(AuthenticationSchemes = "Access")]
+        [HttpPut]
+        public async Task<IActionResult> UpdateProfile(AddDataProfileJson json)
+        {
+            try
+            {
+                var user_id = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (user_id == null)
+                {
+                    _logger.LogWarning("Пользователь не найден. Пользователь ID не найден в claims.");
+                    return NotFound("Пользователь не найден");
+                }
+                if (!int.TryParse(user_id, out int userId))
+                {
+                    _logger.LogWarning("Не удаётся преобразовать в INT: {UserId}", user_id);
+                    return BadRequest("Неверный идентификатор пользователя");
+                }
 
+                _logger.LogInformation("Запрос на обновление профиля пользователя с ID: {UserId}", userId);
+
+                var userprofile = await _context.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (userprofile == null)
+                {
+                    _logger.LogWarning("Профиль пользователя с ID: {UserId} не найден", userId);
+                    return BadRequest("Пользователя не существует");
+                }
+
+                userprofile.FirstName = json?.FirstName ?? userprofile.FirstName;
+                userprofile.LastName = json?.LastName ?? userprofile.LastName;
+                userprofile.PhoneNumber = json?.PhoneNumber ?? userprofile.PhoneNumber;
+                userprofile.Address = json?.Address ?? userprofile.Address;
+
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Профиль пользователя с ID: {UserId} успешно обновлён", userId);
+
+                return Ok("Профиль успешно обновлён");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при обновлении данных пользователя с email: {UserEmail}", HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, "Внутренняя ошибка сервера. Попробуйте снова.");
+            }
+        }
+        [Authorize(AuthenticationSchemes = "Access")]
+        [HttpPatch]
+        public async Task<IActionResult> ClearProfile()
+        {
+            try
+            {
+                var user_id = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (user_id == null)
+                {
+                    _logger.LogWarning("Попытка очистки данных профиля без указания ID пользователя.");
+                    return NotFound("Пользователь не найден");
+                }
+
+                if (!int.TryParse(user_id, out int userId))
+                {
+                    _logger.LogWarning("Не удаётся преобразовать в INT: {UserId}", user_id);
+                    return BadRequest("Неверный идентификатор пользователя");
+                }
+
+                _logger.LogInformation("Запрос на очистку необязательных данных профиля пользователя с ID: {UserId}", userId);
+
+
+                var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
+                if (userProfile == null)
+                {
+                    _logger.LogWarning("Профиль пользователя с ID: {UserId} не найден", userId);
+                    return NotFound("Профиль пользователя не существует");
+                }
+
+
+                userProfile.FirstName = null;
+                userProfile.LastName = null;
+                userProfile.PhoneNumber = null;
+                userProfile.Address = null;
+
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Необязательные данные профиля пользователя с ID: {UserId} успешно очищены", userId);
+                return Ok("Необязательные данные профиля успешно очищены");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при очистке данных профиля пользователя с ID: {UserId}", HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, "Внутренняя ошибка сервера. Попробуйте снова.");
+            }
+        }
     }
 }
