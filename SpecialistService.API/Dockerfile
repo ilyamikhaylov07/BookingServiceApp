@@ -6,6 +6,7 @@ USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+EXPOSE 8082
 
 
 # Этот этап используется для сборки проекта службы

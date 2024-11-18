@@ -1,4 +1,5 @@
 using Infrastructure.Logger;
+using Infrastructure.RabbitMQ;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -19,6 +20,7 @@ try
     ///  LOGGER
     ///
 
+    builder.Services.AddMassTransitWithRabbitMQ(builder.Configuration);
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     SwaggerSettings.AddLocker(builder);

@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace UserService.API.DTOs
+﻿namespace UserService.API.DTOs
 {
     public class RefreshTokenJson
     {
-        [Required]
-        public string RefreshToken { get; set; }
+        public required string RefreshToken { get; set; }
     }
 }

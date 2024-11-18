@@ -1,17 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace UserService.API.DTOs
+﻿namespace UserService.API.DTOs
 {
     public class RegistrationJson
     {
-        [Required]
-        public string UserName { get; set; }
-        [Required]
-        public string Password { get; set; }
-        [Required]
-        public string Email { get; set; }
-        [Required]
-        public bool IsSpecialist {  get; set; }
+        public required string UserName { get; set; }
+        public required string Password { get; set; }
+        public required string Email { get; set; }
+        public bool IsSpecialist { get; set; }
 
     }
 }

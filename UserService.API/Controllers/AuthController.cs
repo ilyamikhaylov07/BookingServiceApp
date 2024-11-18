@@ -1,7 +1,9 @@
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using UserService.API.Contracts;
 using UserService.API.DTOs;
 using UserService.API.Models;
 using UserService.API.Repositories;
@@ -16,9 +18,11 @@ namespace UserService.API.Controllers
         private readonly UserDbContext _context;
         private readonly TokenManager _manager;
         private readonly ILogger<AuthController> _logger;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public AuthController(UserDbContext context, TokenManager token, ILogger<AuthController> logger)
+        public AuthController(UserDbContext context, TokenManager token, ILogger<AuthController> logger, IPublishEndpoint publishEndpoint)
         {
+            _publishEndpoint = publishEndpoint;
             _context = context;
             _manager = token;
             _logger = logger;
@@ -71,7 +75,7 @@ namespace UserService.API.Controllers
                     Role = role,
                     Created = DateTime.UtcNow
                 };
-     
+
                 _context.Users.Add(people);
 
                 await _context.SaveChangesAsync();
@@ -88,6 +92,16 @@ namespace UserService.API.Controllers
                 _context.UserProfiles.Add(profiles);
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("ѕользователь {Email} успешно зарегистрирован", json.Email);
+                if (role.Name == "Specialist")
+                {
+                    await _publishEndpoint.Publish(new UserRegisteredEvent
+                    {
+                        UserId = people.Id,
+                        Email = people.Email,
+                        Role = role.Name
+                    });
+                }
+
                 return Ok("ѕользователь успешно зарегистрирован");
             }
             catch (Exception ex)
