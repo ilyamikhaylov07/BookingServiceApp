@@ -5,8 +5,8 @@ namespace SpecialistService.API.Repositories
 {
     public class SpecialistDbContext : DbContext
     {
-        DbSet<Specialists> Specialists { get; set; }
-        DbSet<Skills> Skills { get; set; }
+        public DbSet<Specialists> Specialists { get; set; }
+        public DbSet<Skills> Skills { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

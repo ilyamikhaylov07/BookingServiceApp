@@ -8,7 +8,7 @@ using UserService.API.Repositories;
 namespace UserService.API.Controllers
 {
     [ApiController]
-    [Route("UserServise/[controller]/[action]")]
+    [Route("UserService/[controller]/[action]")]
     public class ProfileController : ControllerBase
     {
         private readonly UserDbContext _context;

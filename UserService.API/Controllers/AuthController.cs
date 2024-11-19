@@ -1,9 +1,9 @@
+using Infrastructure.Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using UserService.API.Contracts;
 using UserService.API.DTOs;
 using UserService.API.Models;
 using UserService.API.Repositories;
@@ -12,7 +12,7 @@ using UserService.API.Services;
 namespace UserService.API.Controllers
 {
     [ApiController]
-    [Route("UserServise/[controller]/[action]")]
+    [Route("UserService/[controller]/[action]")]
     public class AuthController : ControllerBase
     {
         private readonly UserDbContext _context;
@@ -94,12 +94,21 @@ namespace UserService.API.Controllers
                 _logger.LogInformation("ѕользователь {Email} успешно зарегистрирован", json.Email);
                 if (role.Name == "Specialist")
                 {
-                    await _publishEndpoint.Publish(new UserRegisteredEvent
+                    try
                     {
-                        UserId = people.Id,
-                        Email = people.Email,
-                        Role = role.Name
-                    });
+                        await _publishEndpoint.Publish(new UserRegisteredEvent
+                        {
+                            UserId = people.Id,
+                            Email = people.Email,
+                            Role = role.Name
+                        });
+
+                        _logger.LogInformation("Message published to RabbitMQ for user {UserId} with role {Role}", people.Id, role.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to publish message for user {UserId}", people.Id);
+                    }
                 }
 
                 return Ok("ѕользователь успешно зарегистрирован");

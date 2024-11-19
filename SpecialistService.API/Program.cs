@@ -19,9 +19,9 @@ try
     ///  LOGGER
     ///
 
- 
-
-    // Регистрация consumer
+    /// 
+    /// CONSUMER
+    ///
     builder.Services.AddMassTransit(x =>
     {
         x.AddConsumer<UserRegisteredConsumer>();
@@ -34,10 +34,17 @@ try
                 h.Password(builder.Configuration["RabbitMQ:Password"]);
             });
 
-            cfg.ConfigureEndpoints(context);
+            cfg.ReceiveEndpoint("specialist-queue", e =>
+            {
+                e.Bind("UserRegistered");
+                e.ConfigureConsumer<UserRegisteredConsumer>(context);
+            });
         });
         
     });
+    /// 
+    /// CONSUMER
+    ///
 
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
