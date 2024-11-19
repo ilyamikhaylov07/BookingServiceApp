@@ -8,6 +8,7 @@ namespace SpecialistService.API.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public string? Profession {  get; set; }
+        public string? Description { get; set; }
         public float? Rating { get; set; }
         public List<Skills>? Skills { get; set; }
     }

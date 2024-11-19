@@ -1,6 +1,8 @@
 using Infrastructure.Logger;
 using Infrastructure.RabbitMQ;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using SpecialistService.API.Repositories;
 using SpecialistService.API.Services;
@@ -46,6 +48,29 @@ try
     /// CONSUMER
     ///
 
+    ///
+    ///  AUTHENTICATION
+    ///
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer("Access", options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ClockSkew = TimeSpan.FromMinutes(1),
+                ValidateIssuer = true,
+                ValidIssuer = AuthOptions.ISSUER,
+                ValidateAudience = true,
+                ValidAudience = AuthOptions.AUDIENCE,
+                ValidateLifetime = true,
+                IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
+                ValidateIssuerSigningKey = true,
+            };
+        });
+    ///
+    ///  AUTHENTICATION
+    ///
+
+    builder.Services.AddAuthorization();
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

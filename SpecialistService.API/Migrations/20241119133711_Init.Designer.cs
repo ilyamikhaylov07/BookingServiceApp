@@ -12,8 +12,8 @@ using SpecialistService.API.Repositories;
 namespace SpecialistService.API.Migrations
 {
     [DbContext(typeof(SpecialistDbContext))]
-    [Migration("20241119092856_Edit_options_spec")]
-    partial class Edit_options_spec
+    [Migration("20241119133711_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,10 +37,7 @@ namespace SpecialistService.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SpecialistId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpecialistsId")
+                    b.Property<int>("SpecialistsId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -76,7 +73,9 @@ namespace SpecialistService.API.Migrations
                 {
                     b.HasOne("SpecialistService.API.Models.Specialists", "Specialists")
                         .WithMany("Skills")
-                        .HasForeignKey("SpecialistsId");
+                        .HasForeignKey("SpecialistsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Specialists");
                 });

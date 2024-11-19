@@ -34,10 +34,7 @@ namespace SpecialistService.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SpecialistId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpecialistsId")
+                    b.Property<int>("SpecialistsId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -54,6 +51,9 @@ namespace SpecialistService.API.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
                     b.Property<string>("Profession")
                         .HasColumnType("text");
@@ -73,7 +73,9 @@ namespace SpecialistService.API.Migrations
                 {
                     b.HasOne("SpecialistService.API.Models.Specialists", "Specialists")
                         .WithMany("Skills")
-                        .HasForeignKey("SpecialistsId");
+                        .HasForeignKey("SpecialistsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Specialists");
                 });

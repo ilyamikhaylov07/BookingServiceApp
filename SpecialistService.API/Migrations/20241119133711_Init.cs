@@ -18,8 +18,8 @@ namespace SpecialistService.API.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    Profession = table.Column<string>(type: "text", nullable: false),
-                    Rating = table.Column<float>(type: "real", nullable: false)
+                    Profession = table.Column<string>(type: "text", nullable: true),
+                    Rating = table.Column<float>(type: "real", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -33,8 +33,7 @@ namespace SpecialistService.API.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     SkillName = table.Column<string>(type: "text", nullable: false),
-                    SpecialistId = table.Column<int>(type: "integer", nullable: false),
-                    SpecialistsId = table.Column<int>(type: "integer", nullable: true)
+                    SpecialistsId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -43,7 +42,8 @@ namespace SpecialistService.API.Migrations
                         name: "FK_Skills_Specialists_SpecialistsId",
                         column: x => x.SpecialistsId,
                         principalTable: "Specialists",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

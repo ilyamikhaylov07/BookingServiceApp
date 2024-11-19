@@ -12,8 +12,8 @@ using SpecialistService.API.Repositories;
 namespace SpecialistService.API.Migrations
 {
     [DbContext(typeof(SpecialistDbContext))]
-    [Migration("20241118124241_Init")]
-    partial class Init
+    [Migration("20241119142931_Added_descr_spec")]
+    partial class Added_descr_spec
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,10 +37,7 @@ namespace SpecialistService.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("SpecialistId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpecialistsId")
+                    b.Property<int>("SpecialistsId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -58,11 +55,13 @@ namespace SpecialistService.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Profession")
-                        .IsRequired()
+                    b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<float>("Rating")
+                    b.Property<string>("Profession")
+                        .HasColumnType("text");
+
+                    b.Property<float?>("Rating")
                         .HasColumnType("real");
 
                     b.Property<int>("UserId")
@@ -77,7 +76,9 @@ namespace SpecialistService.API.Migrations
                 {
                     b.HasOne("SpecialistService.API.Models.Specialists", "Specialists")
                         .WithMany("Skills")
-                        .HasForeignKey("SpecialistsId");
+                        .HasForeignKey("SpecialistsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Specialists");
                 });
