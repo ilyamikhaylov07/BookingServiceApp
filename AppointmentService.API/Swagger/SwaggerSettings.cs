@@ -1,6 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 
-namespace UserService.API.Swagger
+namespace AppointmentService.API.Swagger
 {
     public class SwaggerSettings
     {

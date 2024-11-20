@@ -49,17 +49,18 @@ namespace SpecialistService.API.Controllers
                 if (specialist == null)
                 {
                     _logger.LogWarning("Specialist not found with user_id: {UserId}", userId);
-                    return BadRequest("Specialist not exist");
+                    return NotFound("Specialist not exist");
                 }
 
                 var skillNames = specialist.Skills?.Select(s => s.SkillName).ToList();
 
                 _logger.LogInformation("Profile for specialist retrieved successfully: {SpecialistId}", specialist.Id);
 
-                return Ok(new ProfileJson
+                return Ok(new GetProfileJson
                 {
+                    Id = specialist.Id,
                     Description = specialist?.Description,
-                    Profession = specialist.Profession,
+                    Profession = specialist?.Profession,
                     SkillName = skillNames
                 });
             }
@@ -98,11 +99,13 @@ namespace SpecialistService.API.Controllers
                 if (specialist == null)
                 {
                     _logger.LogWarning("Specialist not found with user_id: {UserId}", userId);
-                    return BadRequest("Specialist not exist");
+                    return NotFound("Specialist not exist");
                 }
 
                 specialist.Profession = json.Profession ?? specialist.Profession;
                 specialist.Description = json?.Description ?? specialist.Description;
+                specialist.Skills = specialist.Skills ?? new List<Skills>();
+
                 if (json.SkillName != null && json.SkillName.Any())
                 {
                     _logger.LogInformation("Clearing existing skills and adding new ones to specialist profile");
@@ -187,16 +190,48 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> ClearProfileSpec()
         {
-            _logger.LogWarning("ClearProfileSpec method called, but implementation is missing");
-            return Ok();
-        }
+            _logger.LogInformation("Starting to clear specialist profile");
 
-        [HttpDelete]
-        [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
-        public async Task<IActionResult> DeleteSkill()
-        {
-            _logger.LogWarning("DeleteSkill method called, but implementation is missing");
-            return Ok();
+            try
+            {
+                var user_id = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (user_id == null)
+                {
+                    _logger.LogWarning("Specialist not found: user_id is null");
+                    return NotFound("Specialist not exist");
+                }
+
+                if (!int.TryParse(user_id, out int userId))
+                {
+                    _logger.LogWarning("Failed to convert user_id to int: {UserId}", user_id);
+                    return BadRequest("Неверный идентификатор пользователя");
+                }
+
+                var specialist = await _context.Specialists
+                    .Include(s => s.Skills)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (specialist == null)
+                {
+                    _logger.LogWarning("Specialist not found with user_id: {UserId}", userId);
+                    return NotFound("Specialist not exist");
+                }
+
+                specialist.Profession = null;
+                specialist.Description = null;
+                specialist.Skills = null;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully clear specialist profile for user_id: {UserId}", userId);
+
+                return Ok("Profile cleared");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating specialist profile for user_id: {UserId}", HttpContext.User.FindFirst(ClaimTypes.NameIdentifier));
+                return StatusCode(500, "Internal server error");
+            }
         }
     }
 }
