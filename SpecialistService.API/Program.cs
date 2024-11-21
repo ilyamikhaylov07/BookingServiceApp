@@ -1,5 +1,4 @@
 using Infrastructure.Logger;
-using Infrastructure.RabbitMQ;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +26,7 @@ try
     builder.Services.AddMassTransit(x =>
     {
         x.AddConsumer<UserRegisteredConsumer>();
+        x.SetKebabCaseEndpointNameFormatter();
 
         x.UsingRabbitMq((context, cfg) =>
         {
@@ -41,8 +41,9 @@ try
                 e.Bind("UserRegistered");
                 e.ConfigureConsumer<UserRegisteredConsumer>(context);
             });
+            cfg.ConfigureEndpoints(context);
         });
-        
+
     });
     /// 
     /// CONSUMER

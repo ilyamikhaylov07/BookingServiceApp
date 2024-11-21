@@ -22,6 +22,42 @@ namespace SpecialistService.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = "Access")]
+        public async Task<IActionResult> GetAllProfilesSpec()
+        {
+            _logger.LogInformation("Starting to get all profiles for specialists");
+
+            try
+            {
+                var specialists = await _context.Specialists
+                    .Include(s => s.Skills)
+                    .ToListAsync();
+
+                if (!specialists.Any())
+                {
+                    _logger.LogInformation("No specialists found");
+                    return Ok(new List<GetProfileJson>());
+                }
+                
+                var result = specialists.Select(s => new GetProfileJson
+                {
+                    Id = s.Id,
+                    SkillName = s.Skills?.Select(skill => skill.SkillName).ToList(),
+                    Profession = s.Profession,
+                    Description = s.Description
+                }).ToList();
+
+                _logger.LogInformation("Successfully retrieved all specialists: Count = {Count}", result.Count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving all specialists");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet]
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> GetProfileSpec()
         {

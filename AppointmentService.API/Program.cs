@@ -1,6 +1,8 @@
+using AppointmentService.API.Repositories;
 using AppointmentService.API.Services;
 using AppointmentService.API.Swagger;
 using Infrastructure.Logger;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -40,8 +42,34 @@ try
     ///  AUTHENTICATION
     ///
 
-    builder.Services.AddAuthorization();
+    /// 
+    /// CONSUMER
+    ///
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddConsumer<SpecialistCreatedConsumer>();
 
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["RabbitMQ:Host"], "/", h =>
+            {
+                h.Username(builder.Configuration["RabbitMQ:Username"]);
+                h.Password(builder.Configuration["RabbitMQ:Password"]);
+            });
+
+            cfg.ReceiveEndpoint("appointment-queue", e =>
+            {
+                e.ConfigureConsumer<SpecialistCreatedConsumer>(context);
+            });
+        });
+
+    });
+    /// 
+    /// CONSUMER
+    ///
+
+    builder.Services.AddAuthorization();
+    builder.Services.AddDbContext<AppointmentDbContext>();
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

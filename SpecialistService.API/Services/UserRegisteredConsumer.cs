@@ -9,11 +9,13 @@ namespace SpecialistService.API.Services
     {
         private readonly SpecialistDbContext _context;
         private readonly ILogger<UserRegisteredConsumer> _logger;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public UserRegisteredConsumer(SpecialistDbContext context, ILogger<UserRegisteredConsumer> logger)
+        public UserRegisteredConsumer(SpecialistDbContext context, ILogger<UserRegisteredConsumer> logger, IPublishEndpoint publishEndpoint)
         {
             _context = context;
             _logger = logger;
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
@@ -32,7 +34,15 @@ namespace SpecialistService.API.Services
                     _context.Specialists.Add(specialist);
                     await _context.SaveChangesAsync();
                     _logger.LogInformation("Specialist with UserId {UserId} added to the database", message.UserId);
-                    
+
+                    var specialistCreatedEvent = new SpecialistCreatedEvent
+                    {
+                        SpecialistId = specialist.Id,
+                        UserId = message.UserId
+                    };
+
+                    await _publishEndpoint.Publish(specialistCreatedEvent);
+                    _logger.LogInformation("Published SpecialistCreatedEvent for SpecialistId {SpecialistId}", specialist.Id);
                 }
             }
             catch (Exception ex)

@@ -15,7 +15,7 @@ namespace SpecialistService.API.Repositories
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("host=localhost; port=5432; database=SpecialistService; Username=postgres; Password=ilia07ilia");
+            optionsBuilder.UseNpgsql("host=host.docker.internal; port=5432; database=SpecialistService; Username=postgres; Password=ilia07ilia");
         }
     }
 }

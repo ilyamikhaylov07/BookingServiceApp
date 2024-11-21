@@ -1,6 +1,4 @@
-﻿
-using System.Runtime.Intrinsics.Arm;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace UserService.API.Services
@@ -62,7 +60,7 @@ namespace UserService.API.Services
 
                 // Сравниваем длину и значения хэшей
                 return hashBytes.Length == storedHashBytes.Length && hashBytes.SequenceEqual(storedHashBytes);
-            }   
+            }
         }
     }
 }
