@@ -1,5 +1,8 @@
+using AppointmentService.API.Helpers;
+using AppointmentService.API.Middleware;
 using AppointmentService.API.Repositories;
 using AppointmentService.API.Services;
+using AppointmentService.API.Services.Interfaces;
 using AppointmentService.API.Swagger;
 using Infrastructure.Logger;
 using MassTransit;
@@ -8,101 +11,96 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-try
-{
-    // Add services to the container.
 
-    ///
-    ///  LOGGER
-    ///
-    builder.Host.UseSerilog(SerilogExtensions.CreateLogger());
-    ///
-    ///  LOGGER
-    ///
+// Add services to the container.
 
-    ///
-    ///  AUTHENTICATION
-    ///
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer("Access", options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ClockSkew = TimeSpan.FromMinutes(1),
-                ValidateIssuer = true,
-                ValidIssuer = AuthOptions.ISSUER,
-                ValidateAudience = true,
-                ValidAudience = AuthOptions.AUDIENCE,
-                ValidateLifetime = true,
-                IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
-                ValidateIssuerSigningKey = true,
-            };
-        });
-    ///
-    ///  AUTHENTICATION
-    ///
+///
+///  LOGGER
+///
+builder.Host.UseSerilog(SerilogExtensions.CreateLogger());
+///
+///  LOGGER
+///
 
-    /// 
-    /// CONSUMER
-    ///
-    builder.Services.AddMassTransit(x =>
+///
+///  AUTHENTICATION
+///
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer("Access", options =>
     {
-        x.AddConsumer<SpecialistCreatedConsumer>();
-
-        x.UsingRabbitMq((context, cfg) =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            cfg.Host(builder.Configuration["RabbitMQ:Host"], "/", h =>
-            {
-                h.Username(builder.Configuration["RabbitMQ:Username"]);
-                h.Password(builder.Configuration["RabbitMQ:Password"]);
-            });
-
-            cfg.ReceiveEndpoint("appointment-queue", e =>
-            {
-                e.ConfigureConsumer<SpecialistCreatedConsumer>(context);
-            });
-        });
-
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuer = true,
+            ValidIssuer = AuthOptions.ISSUER,
+            ValidateAudience = true,
+            ValidAudience = AuthOptions.AUDIENCE,
+            ValidateLifetime = true,
+            IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
+            ValidateIssuerSigningKey = true,
+        };
     });
-    /// 
-    /// CONSUMER
-    ///
+///
+///  AUTHENTICATION
+///
 
-    builder.Services.AddAuthorization();
-    builder.Services.AddDbContext<AppointmentDbContext>();
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-    builder.Services.AddCors();
+/// 
+/// CONSUMER
+///
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<SpecialistCreatedConsumer>();
 
-
-    SwaggerSettings.AddLocker(builder);
-    var app = builder.Build();
-
-    app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
-
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    x.UsingRabbitMq((context, cfg) =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+        cfg.Host(builder.Configuration["RabbitMQ:Host"], "/", h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:Username"]);
+            h.Password(builder.Configuration["RabbitMQ:Password"]);
+        });
 
-    app.UseHttpsRedirection();
+        cfg.ReceiveEndpoint("appointment-queue", e =>
+        {
+            e.ConfigureConsumer<SpecialistCreatedConsumer>(context);
+        });
+    });
 
-    app.UseAuthorization();
+});
+/// 
+/// CONSUMER
+///
 
-    app.MapControllers();
+builder.Services.AddAuthorization();
+builder.Services.AddDbContext<AppointmentDbContext>();
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddCors();
 
-    app.Run();
-}
-catch (Exception ex)
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<ISubscribeService, SubscribeService>();
+
+SwaggerSettings.AddLocker(builder);
+var app = builder.Build();
+
+app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
+
+app.UseMiddleware<MiddlewareException>();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    Log.Fatal(ex, "Приложению не удаётся запуститься из-за критической ошибки");
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-finally
-{
-    Log.CloseAndFlush();
-}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+
 

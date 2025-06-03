@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace AppointmentService.API.Services
+namespace AppointmentService.API.Helpers
 {
     public class AuthOptions
     {

@@ -3,7 +3,7 @@ using AppointmentService.API.Repositories;
 using Infrastructure.Contracts;
 using MassTransit;
 
-namespace AppointmentService.API.Services
+namespace AppointmentService.API.Helpers
 {
     public class SpecialistCreatedConsumer : IConsumer<SpecialistCreatedEvent>
     {
