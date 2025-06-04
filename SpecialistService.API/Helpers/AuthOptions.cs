@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace SpecialistService.API.Services
+namespace SpecialistService.API.Helpers
 {
     public class AuthOptions
     {

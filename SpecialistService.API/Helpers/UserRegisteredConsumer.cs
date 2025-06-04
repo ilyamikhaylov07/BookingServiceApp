@@ -3,7 +3,7 @@ using MassTransit;
 using SpecialistService.API.Models;
 using SpecialistService.API.Repositories;
 
-namespace SpecialistService.API.Services
+namespace SpecialistService.API.Helpers
 {
     public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     {

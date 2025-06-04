@@ -20,6 +20,12 @@ namespace AppointmentService.API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        /// <summary>
+        /// Получить расписание текущего специалиста из базы данных
+        /// </summary>
+        /// <returns>
+        /// Объект <see cref="GetScheduleJson"/>, содержащий расписание специалиста, или null, если не найдено
+        /// </returns>
         public async Task<GetScheduleJson?> GetScheduleSpecialist()
         {
             string? userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -51,6 +57,14 @@ namespace AppointmentService.API.Services
             };
         }
 
+
+        /// <summary>
+        /// Получить расписание специалиста по его идентификатору
+        /// </summary>
+        /// <param name="specialistId">Идентификатор специалиста</param>
+        /// <returns>
+        /// Объект <see cref="GetScheduleJson"/>, содержащий расписание специалиста, или null, если не найдено
+        /// </returns>
         public async Task<GetScheduleJson?> GetSpecialistForId(int specialistId)
         {
             if (specialistId <= 0)
@@ -74,6 +88,14 @@ namespace AppointmentService.API.Services
             };
         }
 
+
+        /// <summary>
+        /// Добавить новое расписание для текущего специалиста и создать связанные записи приёмов
+        /// </summary>
+        /// <param name="json">Данные нового расписания</param>
+        /// <returns>
+        /// Строка с сообщением об успехе или null, если операция не удалась
+        /// </returns>
         public async Task<string?> AddNewSchedule(AddScheduleJson json)
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -118,6 +140,14 @@ namespace AppointmentService.API.Services
             return "Successfully added schedule specialist";
         }
 
+
+        /// <summary>
+        /// Обновить текущее расписание специалиста, удалив устаревшие и добавив новые даты
+        /// </summary>
+        /// <param name="json">Объект с новыми датами расписания</param>
+        /// <returns>
+        /// Строка с сообщением об успешном обновлении или null, если обновление невозможно
+        /// </returns>
         public async Task<string?> UpdateSchedule(UpdateScheduleJson json)
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);

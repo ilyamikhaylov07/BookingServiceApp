@@ -20,6 +20,13 @@ namespace AppointmentService.API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+
+        /// <summary>
+        /// Получить запись на приём текущего пользователя
+        /// </summary>
+        /// <returns>
+        /// Объект <see cref="GetAppointmentJson"/>, содержащий информацию о записи на приём, или null, если запись не найдена
+        /// </returns>
         public async Task<GetAppointmentJson?> GetAppointmentUser()
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -49,6 +56,14 @@ namespace AppointmentService.API.Services
             };
         }
 
+
+        /// <summary>
+        /// Записаться на приём к специалисту по выбранной дате
+        /// </summary>
+        /// <param name="json">Объект <see cref="SignUpJson"/>, содержащий ID специалиста и дату приёма</param>
+        /// <returns>
+        /// Строка с сообщением об успешной записи или null, если запись невозможна (например, время занято или не найдено)
+        /// </returns>
         public async Task<string?> Subscribe(SignUpJson json)
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);

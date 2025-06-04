@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 ///
 ///  LOGGER
 ///
-builder.Host.UseSerilog(SerilogExtensions.CreateLogger());
+builder.Host.UseSerilog(SerilogExtensions.CreateLogger(builder));
 ///
 ///  LOGGER
 ///
@@ -82,7 +82,24 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<ISubscribeService, SubscribeService>();
 
 SwaggerSettings.AddLocker(builder);
+
+
 var app = builder.Build();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "{RequestMethod} {RequestPath} Ip: {ClientIp} StatusCode: {StatusCode}";
+    options.EnrichDiagnosticContext = (diagContext, httpContext) =>
+    {
+        var ip = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                httpContext.Connection.RemoteIpAddress?.ToString();
+
+        diagContext.Set("ClientIp", ip);
+        diagContext.Set("URI", httpContext.Request.Path);
+        diagContext.Set("Method", httpContext.Request.Method);
+        diagContext.Set("StatusCode", httpContext.Response.StatusCode);
+    };
+});
 
 app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
 

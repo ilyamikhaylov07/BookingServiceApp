@@ -15,7 +15,7 @@ try
     ///
     ///  LOGGER
     ///
-    builder.Host.UseSerilog(SerilogExtensions.CreateLogger());
+    builder.Host.UseSerilog(SerilogExtensions.CreateLogger(builder));
     ///
     ///  LOGGER
     ///
