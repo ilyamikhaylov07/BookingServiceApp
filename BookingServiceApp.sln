@@ -30,8 +30,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppointmentService.Tests", "AppointmentService.Tests\AppointmentService.Tests.csproj", "{3EADF483-29DB-4009-B201-7DE5313FC9C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecialistService.Tests", "SpecialistService.Tests\SpecialistService.Tests.csproj", "{CADD6919-D216-4151-907F-2ED6318804D3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2AEC837E-B85B-4F9D-998C-11F783087EB4} = {2AEC837E-B85B-4F9D-998C-11F783087EB4}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserService.Tests", "UserService.Tests\UserService.Tests.csproj", "{134DFE12-5AE6-480A-A573-4A62EC05439F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2AEC837E-B85B-4F9D-998C-11F783087EB4} = {2AEC837E-B85B-4F9D-998C-11F783087EB4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

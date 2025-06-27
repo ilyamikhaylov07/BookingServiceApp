@@ -4,9 +4,9 @@ namespace AppointmentService.API.Services.Interfaces
 {
     public interface IScheduleService
     {
-        public Task<GetScheduleJson?> GetScheduleSpecialist();
-        public Task<GetScheduleJson?> GetSpecialistForId(int specialistId);
-        public Task<string?> AddNewSchedule(AddScheduleJson json);
-        public Task<string?> UpdateSchedule(UpdateScheduleJson json);
+        public Task<GetScheduleJson?> GetScheduleSpecialistAsync();
+        public Task<GetScheduleJson?> GetSpecialistForIdAsync(int specialistId);
+        public Task<string?> AddNewScheduleAsync(AddScheduleJson json);
+        public Task<string?> UpdateScheduleAsync(UpdateScheduleJson json);
     }
 }
