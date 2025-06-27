@@ -11,120 +11,111 @@ using UserService.API.Swagger;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-try
-{
-    ///
-    ///  LOGGER
-    ///
-    builder.Host.UseSerilog(SerilogExtensions.CreateLogger(builder));
-    ///
-    ///  LOGGER
-    ///
 
-    builder.Services.AddMassTransitWithRabbitMQ(builder.Configuration);
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    SwaggerSettings.AddLocker(builder);
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-    builder.Services.AddCors();
-    builder.Services.AddDbContext<UserDbContext>();
+///
+///  LOGGER
+///
+builder.Host.UseSerilog(SerilogExtensions.CreateLogger(builder));
+///
+///  LOGGER
+///
 
-    /// 
-    /// Аунтефикация
-    ///
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer("Access", options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ClockSkew = TimeSpan.FromMinutes(1),
-                ValidateIssuer = true,
-                ValidIssuer = AuthOptions.ISSUER,
-                ValidateAudience = true,
-                ValidAudience = AuthOptions.AUDIENCE,
-                ValidateLifetime = true,
-                IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
-                ValidateIssuerSigningKey = true,
-            };
-            options.Events = new JwtBearerEvents
-            {
-                OnAuthenticationFailed = context =>
-                {
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TokenManager>>();
-                    logger.LogError(context.Exception, "Ошибка аутентификации токена");
-                    return Task.CompletedTask;
-                },
-                OnTokenValidated = context =>
-                {
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TokenManager>>();
-                    logger.LogInformation("Токен успешно валидирован для пользователя: {User}", context.Principal?.Identity?.Name);
-                    return Task.CompletedTask;
-                }
-            };
-        })
-        .AddJwtBearer("Refresh", options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ClockSkew = TimeSpan.FromMinutes(1),
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
-                ValidateIssuerSigningKey = true,
-            };
+builder.Services.AddMassTransitWithRabbitMQ(builder.Configuration);
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+SwaggerSettings.AddLocker(builder);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddCors();
+builder.Services.AddDbContext<UserDbContext>();
 
-        });
-    /// 
-    /// Аунтефикация
-    ///
-
-    builder.Services.AddAuthorization();
-
-    builder.Services.AddScoped<AuthService>();
-    builder.Services.AddScoped<ProfileService>();
-
-    /// 
-    /// Зависимости TokenManager
-    ///
-    builder.Services.AddScoped(provider =>
+/// 
+/// Аунтефикация
+///
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer("Access", options =>
     {
-        return new TokenManager(
-            AuthOptions.GetSymSecurityKey(),
-            AuthOptions.ISSUER,
-            AuthOptions.AUDIENCE
-            );
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuer = true,
+            ValidIssuer = AuthOptions.ISSUER,
+            ValidateAudience = true,
+            ValidAudience = AuthOptions.AUDIENCE,
+            ValidateLifetime = true,
+            IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
+            ValidateIssuerSigningKey = true,
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TokenManager>>();
+                logger.LogError(context.Exception, "Ошибка аутентификации токена");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TokenManager>>();
+                logger.LogInformation("Токен успешно валидирован для пользователя: {User}", context.Principal?.Identity?.Name);
+                return Task.CompletedTask;
+            }
+        };
+    })
+    .AddJwtBearer("Refresh", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            IssuerSigningKey = AuthOptions.GetSymSecurityKey(),
+            ValidateIssuerSigningKey = true,
+        };
+
     });
-    /// 
-    /// Зависимости TokenManager
-    ///
+/// 
+/// Аунтефикация
+///
 
-    var app = builder.Build();
+builder.Services.AddAuthorization();
 
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-    app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
-    app.UseHttpsRedirection();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ProfileService>();
 
-    app.UseMiddleware<MiddlewareException>();
-
-    app.UseAuthorization();
-
-    app.MapControllers();
-
-    app.Run();
-}
-catch (Exception ex)
+/// 
+/// Зависимости TokenManager
+///
+builder.Services.AddScoped(provider =>
 {
-    Log.Fatal(ex, "Приложению не удаётся запуститься из-за критической ошибки");
-}
-finally
+    return new TokenManager(
+        AuthOptions.GetSymSecurityKey(),
+        AuthOptions.ISSUER,
+        AuthOptions.AUDIENCE
+        );
+});
+/// 
+/// Зависимости TokenManager
+///
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    Log.CloseAndFlush();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
+app.UseHttpsRedirection();
+
+app.UseMiddleware<MiddlewareException>();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
 
