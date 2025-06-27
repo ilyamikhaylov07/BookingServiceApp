@@ -21,7 +21,7 @@ namespace SpecialistService.API.Services
             _accessor = accessor;
         }
 
-        public async Task<List<GetSkillsJson>?> GetSkills()
+        public async Task<List<GetSkillsJson>?> GetSkillsAsync()
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)
@@ -57,7 +57,7 @@ namespace SpecialistService.API.Services
             return skillsList;
         }
 
-        public async Task<string?> AddNewSkill(AddSkillJson json)
+        public async Task<string?> AddNewSkillAsync(AddSkillJson json)
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)
@@ -95,7 +95,7 @@ namespace SpecialistService.API.Services
             return "Skill successfully added";
         } 
 
-        public async Task<string?> DeleteExistSkills(DeleteSkillJson json)
+        public async Task<string?> DeleteExistSkillsAsync(DeleteSkillJson json)
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)

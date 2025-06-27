@@ -11,28 +11,31 @@ namespace UserService.API.Services
         public static string HashPassword(string password)
         {
             byte[] saltBytes = new byte[SaltSize];
-            using (var rnd = RandomNumberGenerator.Create())
-            {
-                rnd.GetBytes(saltBytes);
-            }
-            using (var sha256 = SHA256.Create())
-            {
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-                byte[] passwordWithSaltBytes = new byte[passwordBytes.Length + saltBytes.Length];
+            using var rnd = RandomNumberGenerator.Create();
 
-                Buffer.BlockCopy(saltBytes, 0, passwordWithSaltBytes, 0, saltBytes.Length);
-                Buffer.BlockCopy(passwordBytes, 0, passwordWithSaltBytes, saltBytes.Length, passwordBytes.Length);
 
-                byte[] hashBytes = sha256.ComputeHash(passwordWithSaltBytes);
+            rnd.GetBytes(saltBytes);
 
-                byte[] hashWithSaltBytes = new byte[saltBytes.Length + hashBytes.Length];
+            using var sha256 = SHA256.Create();
 
-                Buffer.BlockCopy(saltBytes, 0, hashWithSaltBytes, 0, saltBytes.Length);
-                Buffer.BlockCopy(hashBytes, 0, hashWithSaltBytes, saltBytes.Length, hashBytes.Length);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            byte[] passwordWithSaltBytes = new byte[passwordBytes.Length + saltBytes.Length];
 
-                return Convert.ToBase64String(hashWithSaltBytes);
-            }
+            Buffer.BlockCopy(saltBytes, 0, passwordWithSaltBytes, 0, saltBytes.Length);
+            Buffer.BlockCopy(passwordBytes, 0, passwordWithSaltBytes, saltBytes.Length, passwordBytes.Length);
+
+            byte[] hashBytes = sha256.ComputeHash(passwordWithSaltBytes);
+
+            byte[] hashWithSaltBytes = new byte[saltBytes.Length + hashBytes.Length];
+
+            Buffer.BlockCopy(saltBytes, 0, hashWithSaltBytes, 0, saltBytes.Length);
+            Buffer.BlockCopy(hashBytes, 0, hashWithSaltBytes, saltBytes.Length, hashBytes.Length);
+
+            return Convert.ToBase64String(hashWithSaltBytes);
+
         }
+
+
         public static bool VerifyPassword(string enteredPassword, string PasswordHash)
         {
             // Декодируем строку в байты
@@ -43,24 +46,24 @@ namespace UserService.API.Services
             Buffer.BlockCopy(hashWithSaltBytes, 0, saltBytes, 0, SaltSize);
 
             // Хэшируем введенный пароль с извлеченной солью
-            using (var sha256 = SHA256.Create())
-            {
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(enteredPassword);
-                byte[] passwordWithSaltBytes = new byte[passwordBytes.Length + saltBytes.Length];
+            using var sha256 = SHA256.Create();
 
-                Buffer.BlockCopy(saltBytes, 0, passwordWithSaltBytes, 0, saltBytes.Length);
-                Buffer.BlockCopy(passwordBytes, 0, passwordWithSaltBytes, saltBytes.Length, passwordBytes.Length);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(enteredPassword);
+            byte[] passwordWithSaltBytes = new byte[passwordBytes.Length + saltBytes.Length];
 
-                // Получаем хэш введенного пароля
-                byte[] hashBytes = sha256.ComputeHash(passwordWithSaltBytes);
+            Buffer.BlockCopy(saltBytes, 0, passwordWithSaltBytes, 0, saltBytes.Length);
+            Buffer.BlockCopy(passwordBytes, 0, passwordWithSaltBytes, saltBytes.Length, passwordBytes.Length);
 
-                // Извлекаем хэш из сохраненного значения
-                byte[] storedHashBytes = new byte[HashSize];
-                Buffer.BlockCopy(hashWithSaltBytes, SaltSize, storedHashBytes, 0, HashSize);
+            // Получаем хэш введенного пароля
+            byte[] hashBytes = sha256.ComputeHash(passwordWithSaltBytes);
 
-                // Сравниваем длину и значения хэшей
-                return hashBytes.Length == storedHashBytes.Length && hashBytes.SequenceEqual(storedHashBytes);
-            }
+            // Извлекаем хэш из сохраненного значения
+            byte[] storedHashBytes = new byte[HashSize];
+            Buffer.BlockCopy(hashWithSaltBytes, SaltSize, storedHashBytes, 0, HashSize);
+
+            // Сравниваем длину и значения хэшей
+            return hashBytes.Length == storedHashBytes.Length && hashBytes.SequenceEqual(storedHashBytes);
+
         }
     }
 }

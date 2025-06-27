@@ -3,7 +3,7 @@ using System.Text;
 
 namespace UserService.API.Services
 {
-    public class AuthOptions
+    public static class AuthOptions
     {
         public const string ISSUER = "MyAuthServer";
         public const string AUDIENCE = "MyAuthClient";

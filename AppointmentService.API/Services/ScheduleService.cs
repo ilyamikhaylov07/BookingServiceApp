@@ -26,7 +26,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Объект <see cref="GetScheduleJson"/>, содержащий расписание специалиста, или null, если не найдено
         /// </returns>
-        public async Task<GetScheduleJson?> GetScheduleSpecialist()
+        public async Task<GetScheduleJson?> GetScheduleSpecialistAsync()
         {
             string? userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -65,7 +65,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Объект <see cref="GetScheduleJson"/>, содержащий расписание специалиста, или null, если не найдено
         /// </returns>
-        public async Task<GetScheduleJson?> GetSpecialistForId(int specialistId)
+        public async Task<GetScheduleJson?> GetSpecialistForIdAsync(int specialistId)
         {
             if (specialistId <= 0)
             {
@@ -96,7 +96,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Строка с сообщением об успехе или null, если операция не удалась
         /// </returns>
-        public async Task<string?> AddNewSchedule(AddScheduleJson json)
+        public async Task<string?> AddNewScheduleAsync(AddScheduleJson json)
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -148,7 +148,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Строка с сообщением об успешном обновлении или null, если обновление невозможно
         /// </returns>
-        public async Task<string?> UpdateSchedule(UpdateScheduleJson json)
+        public async Task<string?> UpdateScheduleAsync(UpdateScheduleJson json)
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 

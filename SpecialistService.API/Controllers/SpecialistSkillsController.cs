@@ -20,7 +20,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> Skills()
         {
-            List<GetSkillsJson>? result = await _skillService.GetSkills();
+            List<GetSkillsJson>? result = await _skillService.GetSkillsAsync();
 
             _logger.LogInformation("Ответ успешно отправлен");
             if (result == null) return NotFound("Нет данных");
@@ -32,7 +32,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> AddSkill(AddSkillJson json)
         {
-            string? result = await _skillService.AddNewSkill(json);
+            string? result = await _skillService.AddNewSkillAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
             if (result == null) return NotFound("Нет данных");
@@ -44,7 +44,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> DeleteSkills(DeleteSkillJson json)
         {
-            var result = await _skillService.DeleteExistSkills(json);
+            var result = await _skillService.DeleteExistSkillsAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
             if (result == null) return NotFound("Нет данных");

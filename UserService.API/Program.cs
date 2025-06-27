@@ -3,6 +3,7 @@ using Infrastructure.RabbitMQ;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using UserService.API.Middleware;
 using UserService.API.Repositories;
 using UserService.API.Services;
 using UserService.API.Swagger;
@@ -81,6 +82,9 @@ try
 
     builder.Services.AddAuthorization();
 
+    builder.Services.AddScoped<AuthService>();
+    builder.Services.AddScoped<ProfileService>();
+
     /// 
     /// Зависимости TokenManager
     ///
@@ -106,6 +110,8 @@ try
     }
     app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
     app.UseHttpsRedirection();
+
+    app.UseMiddleware<MiddlewareException>();
 
     app.UseAuthorization();
 

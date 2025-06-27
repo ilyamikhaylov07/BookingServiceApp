@@ -21,7 +21,7 @@ namespace SpecialistService.API.Services
             _logger = logger;
         }
 
-        public async Task<List<GetProfileJson>?> GetAllProfiles()
+        public async Task<List<GetProfileJson>?> GetAllProfilesAsync()
         {
             var specialists = await _context.Specialists
                 .Include(s => s.Skills)
@@ -45,7 +45,7 @@ namespace SpecialistService.API.Services
             return result;
         }
 
-        public async Task<GetProfileJson?> GetProfileSpecialist()
+        public async Task<GetProfileJson?> GetProfileSpecialistAsync()
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)
@@ -83,7 +83,7 @@ namespace SpecialistService.API.Services
             };
         }
 
-        public async Task<string?> AddNewData(ProfileJson json)
+        public async Task<string?> AddNewDataAsync(ProfileJson json)
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)
@@ -129,7 +129,7 @@ namespace SpecialistService.API.Services
             return "Skill successfully added";
         }
 
-        public async Task<string?> ChangeInfoProfile(UpdateProfileJson json)
+        public async Task<string?> ChangeInfoProfileAsync(UpdateProfileJson json)
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -175,7 +175,7 @@ namespace SpecialistService.API.Services
             return "Profile updated";
         }
 
-        public async Task<string?> ClearProfile()
+        public async Task<string?> ClearProfileAsync()
         {
             var user_id = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user_id == null)

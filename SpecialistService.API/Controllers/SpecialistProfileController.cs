@@ -22,7 +22,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access")]
         public async Task<IActionResult> AllProfilesSpec()
         {
-            List<GetProfileJson>? result = await _profileService.GetAllProfiles();
+            List<GetProfileJson>? result = await _profileService.GetAllProfilesAsync();
 
             if (result == null) return NotFound("Нет данных");
 
@@ -35,7 +35,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> ProfileSpec()
         {
-            GetProfileJson? result = await _profileService.GetProfileSpecialist();
+            GetProfileJson? result = await _profileService.GetProfileSpecialistAsync();
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -48,7 +48,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> AddDataProfileSpec(ProfileJson json)
         {
-            string? result = await _profileService.AddNewData(json);
+            string? result = await _profileService.AddNewDataAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -61,7 +61,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> UpdateDataProfileSpec(UpdateProfileJson json)
         {
-            string? result = await _profileService.ChangeInfoProfile(json);
+            string? result = await _profileService.ChangeInfoProfileAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -72,7 +72,7 @@ namespace SpecialistService.API.Controllers
         [Authorize(AuthenticationSchemes = "Access", Roles = "Specialist")]
         public async Task<IActionResult> ClearProfileSpec()
         {
-            var result = await _profileService.ClearProfile();
+            var result = await _profileService.ClearProfileAsync();
 
             _logger.LogInformation("Ответ успешно отправлен");
 

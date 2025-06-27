@@ -29,7 +29,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ScheduleSpecialist()
         {
-            GetScheduleJson? result = await _scheduleService.GetScheduleSpecialist();
+            GetScheduleJson? result = await _scheduleService.GetScheduleSpecialistAsync();
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -53,7 +53,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ScheduleSpecialistForId(int specialistId)
         {
-            GetScheduleJson? result = await _scheduleService.GetSpecialistForId(specialistId);
+            GetScheduleJson? result = await _scheduleService.GetSpecialistForIdAsync(specialistId);
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -74,7 +74,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddScheduleSpecialist(AddScheduleJson json)
         {
-            string? result = await _scheduleService.AddNewSchedule(json);
+            string? result = await _scheduleService.AddNewScheduleAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -95,7 +95,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateScheduleSpecialist(UpdateScheduleJson json)
         {
-            string? result = await _scheduleService.UpdateSchedule(json);
+            string? result = await _scheduleService.UpdateScheduleAsync(json);
 
             if (result == null) return NotFound("Нет данных");
 

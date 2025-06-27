@@ -31,7 +31,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AppointmentsUser()
         {
-            GetAppointmentJson? result = await _subscribeService.GetAppointmentUser();
+            GetAppointmentJson? result = await _subscribeService.GetAppointmentUserAsync();
 
             _logger.LogInformation("Ответ успешно отправлен");
 
@@ -52,7 +52,7 @@ namespace AppointmentService.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SubscribeAppointment(SignUpJson json)
         {
-            string? result = await _subscribeService.Subscribe(json);
+            string? result = await _subscribeService.SubscribeAsync(json);
 
             _logger.LogInformation("Ответ успешно отправлен");
 

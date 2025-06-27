@@ -27,7 +27,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Объект <see cref="GetAppointmentJson"/>, содержащий информацию о записи на приём, или null, если запись не найдена
         /// </returns>
-        public async Task<GetAppointmentJson?> GetAppointmentUser()
+        public async Task<GetAppointmentJson?> GetAppointmentUserAsync()
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -64,7 +64,7 @@ namespace AppointmentService.API.Services
         /// <returns>
         /// Строка с сообщением об успешной записи или null, если запись невозможна (например, время занято или не найдено)
         /// </returns>
-        public async Task<string?> Subscribe(SignUpJson json)
+        public async Task<string?> SubscribeAsync(SignUpJson json)
         {
             var user_id = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
